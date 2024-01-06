@@ -1,1 +1,1 @@
-command_prefix = '!'
+command_prefix = '&'

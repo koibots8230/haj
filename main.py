@@ -1,15 +1,19 @@
 import discord
 import shlex
 
-import tokens
-# import commands
 import config
-
+import database
+import templates
+from commands import commands, admin_commands
+import tokens
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+
+
+# guilds = {}
 
 
 @client.event
@@ -18,22 +22,28 @@ async def on_ready():
 
 
 @client.event
-async def on_message(message):
+async def on_guild_join(guild: discord.Guild):
+    database.update_guild_ids(client)
+
+
+@client.event
+async def on_guild_join(guild: discord.Guild):
+    database.update_guild_ids(client)
+
+
+@client.event
+async def on_message(message: discord.Message):
     if message.author != client.user:
         if message.content[0] == config.command_prefix:
             args = shlex.split(message.content[1:])
             args[0] = args[0].lower()
-            try:
-                await getattr(__import__("commands"), "command_" + args[0])(message, args[1:])
-            except AttributeError:
-                await message.channel.send(f"{client.user.name}: Error: Command \"{args[0]}\" does not exist")
+            if args[0] in commands:
+                await getattr(__import__("commands"), "command_" + args[0])(message, args)
+            elif (database.is_admin(message.author.id) and
+                  isinstance(message.channel, discord.DMChannel) and args[0] in admin_commands):
+                await getattr(__import__("commands"), "admin_command_" + args[0])(message, client, args)
+            else:
+                await message.reply(embed=templates.error(f"Command \"{args[0]}\" does not exist"))
 
 
 client.run(tokens.discord)
-
-
-def split_command(command):
-    if command[0] == config.command_prefix:
-        return shlex.split(command[1:])
-    else:
-        return None
