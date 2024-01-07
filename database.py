@@ -2,18 +2,20 @@ import sqlite3
 
 import discord
 
-connection = sqlite3.connect("haj.db")
-cursor = connection.cursor()
+
+database_ro = sqlite3.connect("haj.db")
 
 
 def update_guild_ids(client: discord.Client) -> None:
+    database = sqlite3.connect("haj.db")
     for guild in client.guilds:
-        if cursor.execute(f"select * from guild where guild_id='{guild.id}'").fetchall() is None:
-            cursor.execute(f"insert into guild values ({guild.id}, null)")
-            connection.commit()
+        if not database.execute("select * from guilds where guild_id = ?", (guild.id,)).fetchall():
+            database.execute("insert into guilds (guild_id) values (?)", (guild.id,))
+    database.commit()
+    database.close()
 
 
-def is_admin(id: int) -> bool:
-    if cursor.execute(f"select * from admins where user_id='{id}'") is not None:
+def is_admin(user_id: int) -> bool:
+    if database_ro.execute("select * from admins where user_id = ?", (user_id,)):
         return True
     return False

@@ -149,8 +149,8 @@ async def admin_command_test_admin(message: discord.Message, client: discord.Cli
 
 admin_commands = dir()
 for item in range(len(admin_commands) - 1, -1, -1):
-    if admin_commands[item][0:8] != "admin_command_":
+    if admin_commands[item][0:14] != "admin_command_":
         admin_commands.pop(item)
     else:
-        admin_commands[item] = admin_commands[item][15:]
+        admin_commands[item] = admin_commands[item][14:]
 admin_commands.sort()
