@@ -7,12 +7,11 @@ import datetime
 import discord
 
 import database
-import config
 import templates
 import tokens
 
 
-async def command_tba(message: discord.Message, args: list[str]):
+async def command_tba(message: discord.Message, client: discord.Client, args: list[str]):
     """
     Gets information on a team from The Blue Alliance
     Usage: `tba <frc_team_number>`
@@ -66,7 +65,7 @@ async def command_tba(message: discord.Message, args: list[str]):
         await message.reply(embed=templates.error("Too many arguments for command \"tba\""))
 
 
-async def command_ping(message: discord.Message, args: list[str]):
+async def command_ping(message: discord.Message, client: discord.Client, args: list[str]):
     """
     Pong!
     Usage: `ping`
@@ -80,7 +79,7 @@ async def command_ping(message: discord.Message, args: list[str]):
         await message.reply(embed=templates.error("Too many arguments for command \"ping\""))
 
 
-async def command_me(message: discord.Message, args: list[str]):
+async def command_me(message: discord.Message, client: discord.Client, args: list[str]):
     """
     Returns info about the sender of the message
     Usage: `me`
@@ -103,17 +102,45 @@ async def command_me(message: discord.Message, args: list[str]):
         await message.reply(embed=templates.error("Too many arguments for command \"me\""))
 
 
-commands = dir()
-for item in range(len(commands) - 1, -1, -1):
-    if commands[item][0:8] != "command_":
-        commands.pop(item)
-    else:
-        commands[item] = commands[item][8:]
-commands.append("help")
-commands.sort()
+async def admin_command_update_guilds(message: discord.Message, client: discord.Client, args: list[str]):
+    database.update_guild_ids(client)
+    await message.channel.send(embed=discord.Embed(description="Done updating guild IDs"))
 
 
-async def command_help(message: discord.Message, args: list[str]):
+async def admin_command_help(message: discord.Message, client: discord.Client, args: list[str]):
+    await base_help(message, args, admin_commands)
+
+
+async def mod_command_help(message: discord.Message, client: discord.Client, args: list[str]):
+    await base_help(message, args, mod_commands)
+
+
+async def command_help(message: discord.Message, client: discord.Client, args: list[str]):
+    await base_help(message, args, commands)
+
+
+all_commands = dir()
+commands = {}
+
+for item in all_commands:
+    if item[:8] == "command_":
+        commands[item[8:]] = item
+commands["help"] = "command_help"
+
+mod_commands = commands.copy()
+for item in all_commands:
+    if item[:12] == "mod_command_":
+        mod_commands[item[12:]] = item
+mod_commands["help"] = "mod_command_help"
+
+admin_commands = commands.copy()
+for item in all_commands:
+    if item[:14] == "admin_command_":
+        admin_commands[item[14:]] = item
+admin_commands["help"] = "admin_command_help"
+
+
+async def base_help(message: discord.Message, args: list[str], command_list: dict):
     """
     Lists the functions that Haj has available
     Usage: `help [command]`
@@ -122,13 +149,13 @@ async def command_help(message: discord.Message, args: list[str]):
     if len(args) == 1:
         embed = discord.Embed(
             title="Available Commands",
-            description="".join([f"`{str(command)}`\n" for command in commands])[:-1]
+            description="".join([f"`{str(command)}`\n" for command in command_list])[:-1]
         )
     elif len(args) == 2:
-        if args[1] in commands:
+        if args[1] in command_list:
             embed = discord.Embed(
                 title=args[1].capitalize(),
-                description=inspect.getdoc(globals()["command_" + args[1]])
+                description=inspect.getdoc(globals()[command_list[args[1]] + args[1]])
             )
         else:
             embed = templates.error(f"Command \"{args[1]}\" does not exist")
@@ -136,21 +163,3 @@ async def command_help(message: discord.Message, args: list[str]):
         embed = templates.error(f"Too many arguments for command \"help\"")
 
     await message.channel.send(embed=embed)
-
-
-async def admin_command_update_guilds(message: discord.Message, client: discord.Client, args: list[str]):
-    database.update_guild_ids(client)
-    await message.channel.send(embed=templates.info("Done updating guild IDs"))
-
-
-async def admin_command_test_admin(message: discord.Message, client: discord.Client, args: list[str]):
-    await message.channel.send(":shark:")
-
-
-admin_commands = dir()
-for item in range(len(admin_commands) - 1, -1, -1):
-    if admin_commands[item][0:14] != "admin_command_":
-        admin_commands.pop(item)
-    else:
-        admin_commands[item] = admin_commands[item][14:]
-admin_commands.sort()

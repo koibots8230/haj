@@ -20,16 +20,3 @@ def error(description=None):
         )
 
     return embed
-
-
-def info(description, title=None, say_info=False):
-    if say_info:
-        return discord.Embed(
-            title=title,
-            description=f"Info: {description}"
-        )
-    else:
-        return discord.Embed(
-            title=title,
-            description=description
-        )
