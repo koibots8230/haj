@@ -1,8 +1,6 @@
 import json
 import os
 
-import discord
-
 
 class Database:
     def __init__(self, file: str):
@@ -19,7 +17,11 @@ class Database:
             "guilds": {},
             "admins": {},
             "config": {
-                "command_prefix": '&'
+                "command_prefix": '&',
+                "tokens": {
+                    "discord": None,
+                    "tba": None
+                }
             }
         }
         self.guild_structure = {
@@ -51,19 +53,3 @@ class Database:
                 else:
                     data[item] = structure[item]
         self.save()
-
-
-database = Database("haj.json")
-
-
-def update_guild_ids(client: discord.Client) -> None:
-    for guild in client.guilds:
-        if str(guild.id) not in database.data["guilds"]:
-            database.data["guilds"][str(guild.id)] = database.guild_structure.copy()
-    database.save()
-
-
-def is_admin(user_id: int) -> bool:
-    if str(user_id) in database.data["admins"]:
-        return True
-    return False
