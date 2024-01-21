@@ -15,7 +15,7 @@ class Database:
             self.data = {}
         self.structure = {
             "guilds": {},
-            "admins": {},
+            "admins": [],
             "config": {
                 "command_prefix": '&',
                 "tokens": {
@@ -26,18 +26,24 @@ class Database:
         }
         self.guild_structure = {
             "task_channel_id": None,
-            "mod_role_ids": {},
-            "mod_user_ids": {},
+            "mod_channel_id": None,
+            "enforce_mod_channel": False,
+            "mod_role_ids": [],
+            "mod_user_ids": [],
             "command_prefix": None
         }
         self.initialize_data(self.data, self.structure)
         for guild in self.data["guilds"]:
             self.initialize_data(self.data["guilds"][guild], self.guild_structure)
+        self.data["guilds"] = {int(guild): data for guild, data in self.data["guilds"].items()}
 
     def save(self) -> None:
+        temp = self.data.copy()
+        temp["guilds"] = {str(guild): data for guild, data in temp["guilds"].items()}
         with open(self.filepath, 'w') as f:
-            json.dump(self.data, f)
+            json.dump(temp, f)
             f.close()
+        del temp
 
     def close(self) -> None:
         self.save()
