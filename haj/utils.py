@@ -1,4 +1,5 @@
 import discord
+import discord.ext.commands
 
 import haj
 
@@ -31,19 +32,20 @@ def get_command_prefix(
         return bot.database.data["config"]["command_prefix"]
 
 
-def is_admin(bot: haj.bot.Bot, user_id: int) -> bool:
-    if user_id in bot.database.data["admins"]:
+def is_admin(bot: haj.bot.Bot, user: discord.User) -> bool:
+    if user.id in bot.database.data["admins"]:
         return True
     return False
 
 
-def is_mod(bot: haj.bot.Bot, user_id: int, guild: discord.Guild) -> bool:
+async def is_mod(bot: haj.bot.Bot, user: discord.User, guild: discord.Guild) -> bool:
     if guild is None:
         return False
-    if user_id in bot.database.data["guilds"][guild.id]["mod_user_ids"]:
+    if (user.id in bot.database.data["guilds"][guild.id]["mod_user_ids"] or
+            (await guild.fetch_member(user.id)).guild_permissions.administrator):
         return True
     for role_id in bot.database.data["guilds"][guild.id]["mod_role_ids"]:
-        if user_id in [user.id for user in guild.get_role(role_id).members]:
+        if user in guild.get_role(role_id).members:
             return True
     return False
 
@@ -59,5 +61,4 @@ def error(description=None) -> discord.Embed:
             description=f"Error",
             color=0xdc4e49
         )
-
     return embed

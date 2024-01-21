@@ -27,13 +27,12 @@ class Database:
         self.guild_structure = {
             "task_channel_id": None,
             "mod_channel_id": None,
-            "enforce_mod_channel": False,
             "mod_role_ids": [],
             "mod_user_ids": [],
             "command_prefix": None
         }
         self.initialize_data(self.data, self.structure)
-        for guild in self.data["guilds"]:
+        for guild in self.data["guilds"].keys():
             self.initialize_data(self.data["guilds"][guild], self.guild_structure)
         self.data["guilds"] = {int(guild): data for guild, data in self.data["guilds"].items()}
 
@@ -55,7 +54,7 @@ class Database:
             if item not in data:
                 if isinstance(item, dict):
                     data[item] = {}
-                    self.initialize_data(structure[item], data[item])
+                    self.initialize_data(data[item], structure[item])
                 else:
                     data[item] = structure[item]
         self.save()

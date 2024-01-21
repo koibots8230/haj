@@ -34,16 +34,19 @@ class Bot:
             if message.content[0] == haj.utils.get_command_prefix(self, message.channel):
                 args = shlex.split(message.content[1:])
                 args[0] = args[0].lower()
-                if (haj.utils.is_admin(self, message.author.id) and
+                if (haj.utils.is_admin(self, message.author) and
                         isinstance(message.channel, discord.DMChannel) and args[0] in haj.commands.admin_commands):
                     await haj.commands.get(haj.commands.admin_commands[args[0]])(message, self, args)
-                elif (haj.utils.is_mod(self, message.author.id, message.guild) and
+                elif (await haj.utils.is_mod(self, message.author, message.guild) and
                         args[0] in haj.commands.mod_commands and
-                        (self.database.data["guilds"][message.guild.id]["enforce_mod_channel"] and
-                         message.channel.id == self.database.data["guilds"][message.guild.id]["mod_channel_id"])):
+                        (not self.database.data["guilds"][message.guild.id]["mod_channel_id"] or
+                         (self.database.data["guilds"][message.guild.id]["mod_channel_id"] and
+                          message.channel.id == self.database.data["guilds"][message.guild.id]["mod_channel_id"]))):
                     await haj.commands.get(haj.commands.mod_commands[args[0]])(message, self, args)
                 elif args[0] in haj.commands.commands:
                     await haj.commands.get(haj.commands.commands[args[0]])(message, self, args)
+                elif args[0] in haj.commands.hidden_commands:
+                    await haj.commands.get(haj.commands.hidden_commands[args[0]])(message, self, args)
                 else:
                     await message.reply(embed=haj.utils.error(f"Command \"{args[0]}\" does not exist"))
 
