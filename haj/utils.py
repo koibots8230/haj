@@ -50,6 +50,23 @@ async def is_mod(bot: haj.bot.Bot, user: discord.User, guild: discord.Guild) -> 
     return False
 
 
+async def is_sheets_available(bot: haj.bot.Bot, message: discord.Message) -> bool:
+    if (bot.database.data["guilds"][message.guild.id]["spreadsheet_id"] and
+            bot.database.data["guilds"][message.guild.id]["sheet_name"] and
+            bot.database.data["config"]["tokens"]["google"]):
+        return True
+    if not bot.database.data["config"]["tokens"]["google"]:
+        await message.reply(embed=haj.utils.error(
+            "Google Sheets API is unavailable right now, please contact a bot admin"))
+        return False
+    else:
+        if not bot.database.data["guilds"][message.guild.id]["spreadsheet_id"]:
+            await message.reply(embed=haj.utils.error("`Spreadsheet ID` is not set in config"))
+        if not bot.database.data["guilds"][message.guild.id]["sheet_name"]:
+            await message.reply(embed=haj.utils.error("`Sheet Name` is not set in config"))
+        return False
+
+
 def error(description=None) -> discord.Embed:
     if description is not None:
         embed = discord.Embed(

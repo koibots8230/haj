@@ -11,6 +11,7 @@ class Bot:
         self.database = haj.database.Database(database_file)
 
         self.enable_tba = False
+        self.enable_sheets = False
 
         intents = discord.Intents.default()
         intents.message_content = True

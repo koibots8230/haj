@@ -20,13 +20,16 @@ class Database:
                 "command_prefix": '&',
                 "tokens": {
                     "discord": None,
-                    "tba": None
+                    "tba": None,
+                    "google": None
                 }
             }
         }
         self.guild_structure = {
             "task_channel_id": None,
             "mod_channel_id": None,
+            "spreadsheet_id": None,
+            "sheet_name": None,
             "mod_role_ids": [],
             "mod_user_ids": [],
             "command_prefix": None
@@ -40,7 +43,7 @@ class Database:
         temp = self.data.copy()
         temp["guilds"] = {str(guild): data for guild, data in temp["guilds"].items()}
         with open(self.filepath, 'w') as f:
-            json.dump(temp, f)
+            json.dump(temp, f, sort_keys=True)
             f.close()
         del temp
 

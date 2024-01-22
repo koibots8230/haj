@@ -104,7 +104,7 @@ async def mod_command_help(message: discord.Message, bot: haj.bot.Bot, args: lis
     await base_help(message, args, mod_commands)
 
 
-async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: list[str or None]):
+async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
     if len(args) <= 1 or args[1].lower() == "help":
         await message.channel.send(embed=discord.Embed(
             title="Available Subcommands",
@@ -140,10 +140,10 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
                     try:
                         bot.database.data["guilds"][message.guild.id][args[2]].append(int(args[3]))
                         bot.database.save()
+                        await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
                     except ValueError:
                         await message.reply(embed=haj.utils.error(f"Please enter a valid number"))
                         return
-                    await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
             else:
                 await message.reply(embed=haj.utils.error(f"Unknown list `{args[2]}`"))
                 return
@@ -161,6 +161,7 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
                     try:
                         bot.database.data["guilds"][message.guild.id][args[2]].remove(int(args[3]))
                         bot.database.save()
+                        await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
                     except ValueError:
                         await message.reply(embed=haj.utils.error(f"Please enter a valid number"))
                         return
@@ -168,7 +169,6 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
                     await message.reply(
                         embed=haj.utils.error(f"Item `{args[3]}` does not exist in list `{args[2]}`"))
                     return
-                await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
             else:
                 await message.reply(embed=haj.utils.error(f"Unknown list `{args[2]}`"))
                 return
@@ -193,10 +193,15 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
                         bot.database.data["guilds"][message.guild.id]["command_prefix"] = args[3][0]
                         bot.database.save()
                         await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
+                elif args[2] in ("spreadsheet_id", "sheet_name"):
+                    bot.database.data["guilds"][message.guild.id][args[2]] = args[3]
+                    bot.database.save()
+                    await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
                 else:
                     try:
                         bot.database.data["guilds"][message.guild.id][args[2]] = int(args[3])
                         bot.database.save()
+                        await message.channel.send(embed=discord.Embed(description="Config updated successfully"))
                     except ValueError:
                         await message.reply(embed=haj.utils.error(f"Please enter a valid number"))
                         return
@@ -225,6 +230,22 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
     else:
         await message.reply(embed=haj.utils.error("Unknown subcommand"))
         return
+
+
+async def mod_command_test_sheets(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+    if len(args) == 9:
+        try:
+            if await haj.utils.is_sheets_available(bot, message):
+                haj.api.sheets.append(
+                    bot.database.data["config"]["tokens"]["google"],
+                    bot.database.data["guilds"][message.guild.id]["spreadsheet_id"],
+                    bot.database.data["guilds"][message.guild.id]["sheet_name"],
+                    args[1:]
+                )
+        except ValueError:
+            await message.reply(embed=haj.utils.error("Google Sheets API failed"))
+    else:
+        await message.channel.send(embed=haj.utils.error("Please supply 8 args"))
 
 
 async def command_help(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
@@ -259,7 +280,6 @@ hidden_commands = {}
 for item in all_commands:
     if item[:15] == "hidden_command_":
         hidden_commands[item[15:]] = item
-print(hidden_commands)
 
 
 async def base_help(message: discord.Message, args: list[str], command_list: dict):
