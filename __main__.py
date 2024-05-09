@@ -1,5 +1,4 @@
-import haj.bot
+import haj
 
 
-bot = haj.bot.Bot("haj.json")
-bot.start()
+haj.Bot().start()

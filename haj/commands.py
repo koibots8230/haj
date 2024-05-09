@@ -6,98 +6,98 @@ import discord
 import haj
 
 
-async def command_tba(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    """
-    Gets information on a team from The Blue Alliance
-    Usage: `tba <frc_team_number>`
-    """
-
-    if bot.enable_tba:
-        if len(args) == 2:
-            try:
-                try:
-                    data = haj.api.tba(f"/team/frc{str(int(args[1]))}",
-                                       bot.database.data["config"]["tokens"]["tba"])
-                    districts = haj.api.tba(f"/team/frc{str(int(args[1]))}/districts",
-                                            bot.database.data["config"]["tokens"]["tba"])
-                    if districts:
-                        data["districts"] = districts[0]
-                    else:
-                        data["districts"] = {}
-                    del districts
-                except ValueError:
-                    await message.reply(embed=haj.utils.error(
-                        f"FRC team `{args[0]}` does not exist or is not in the TBA database"))
-                    return
-                embed = discord.Embed(
-                    title=f"FIRST® Robotics Competition Team {args[1]}",
-                    url=f"https://www.thebluealliance.com/team/{args[1]}",
-                    color=0x3f51b5
-                )
-                embed.set_thumbnail(url=f"https://frcavatars.herokuapp.com/get_image?team={args[1]}")
-                embed.add_field(name="Name", value=data["nickname"])
-                embed.add_field(name="Rookie Year", value=data["rookie_year"])
-                embed.add_field(name="Location",
-                                value=f"{data['city']}, {data['state_prov']}, {data['postal_code']}, {data['country']}")
-                if data["website"]:
-                    embed.add_field(name="Website", value=data["website"])
-                if data["districts"] and data["districts"]["display_name"]:
-                    embed.add_field(name="District",
-                                    value=f"{data['districts']['display_name']} [{data['districts']['abbreviation']}]")
-                await message.channel.send(embed=embed)
-            except ValueError:
-                await message.reply(embed=haj.utils.error(f"Please enter a valid number"))
-        elif len(args) == 1:
-            await message.reply(embed=haj.utils.error("Missing argument `frc_team_number`"))
-        else:
-            await message.reply(embed=haj.utils.error("Too many arguments for command `tba`"))
-    else:
-        await message.channel.send(
-            embed=haj.utils.error("Command `tba` is unavailable right now, please contact a bot admin"))
-
-
-async def command_ping(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    """
-    Pong!
-    Usage: `ping`
-    """
-
-    if len(args) == 1:
-        await message.channel.send(
-            f"Pong ({int((datetime.datetime.now(datetime.timezone.utc) - message.created_at).total_seconds() * 1000)} "
-            f"ms)")
-    else:
-        await message.reply(embed=haj.utils.error("Too many arguments for command `ping`"))
+# async def command_tba(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+#     """
+#     Gets information on a team from The Blue Alliance
+#     Usage: `tba <frc_team_number>`
+#     """
+#
+#     if bot.enable_tba:
+#         if len(args) == 2:
+#             try:
+#                 try:
+#                     data = haj.api.tba(f"/team/frc{str(int(args[1]))}",
+#                                        bot.database.data["config"]["tokens"]["tba"])
+#                     districts = haj.api.tba(f"/team/frc{str(int(args[1]))}/districts",
+#                                             bot.database.data["config"]["tokens"]["tba"])
+#                     if districts:
+#                         data["districts"] = districts[0]
+#                     else:
+#                         data["districts"] = {}
+#                     del districts
+#                 except ValueError:
+#                     await message.reply(embed=haj.utils.error(
+#                         f"FRC team `{args[0]}` does not exist or is not in the TBA database"))
+#                     return
+#                 embed = discord.Embed(
+#                     title=f"FIRST® Robotics Competition Team {args[1]}",
+#                     url=f"https://www.thebluealliance.com/team/{args[1]}",
+#                     color=0x3f51b5
+#                 )
+#                 embed.set_thumbnail(url=f"https://frcavatars.herokuapp.com/get_image?team={args[1]}")
+#                 embed.add_field(name="Name", value=data["nickname"])
+#                 embed.add_field(name="Rookie Year", value=data["rookie_year"])
+#                 embed.add_field(name="Location",
+#                                 value=f"{data['city']}, {data['state_prov']}, {data['postal_code']}, {data['country']}")
+#                 if data["website"]:
+#                     embed.add_field(name="Website", value=data["website"])
+#                 if data["districts"] and data["districts"]["display_name"]:
+#                     embed.add_field(name="District",
+#                                     value=f"{data['districts']['display_name']} [{data['districts']['abbreviation']}]")
+#                 await message.channel.send(embed=embed)
+#             except ValueError:
+#                 await message.reply(embed=haj.utils.error(f"Please enter a valid number"))
+#         elif len(args) == 1:
+#             await message.reply(embed=haj.utils.error("Missing argument `frc_team_number`"))
+#         else:
+#             await message.reply(embed=haj.utils.error("Too many arguments for command `tba`"))
+#     else:
+#         await message.channel.send(
+#             embed=haj.utils.error("Command `tba` is unavailable right now, please contact a bot admin"))
 
 
-async def command_me(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    """
-    Returns info about the sender of the message
-    Usage: `me`
-    """
-
-    if len(args) == 1:
-        embed = discord.Embed(title="User Info")
-        embed.add_field(name="Username", value=message.author.name)
-        embed.add_field(name="Display Name", value=message.author.display_name)
-        embed.add_field(name="User ID", value=message.author.id)
-        if isinstance(message.channel, discord.DMChannel):
-            embed.add_field(name="Is Haj Admin", value=haj.utils.is_admin(bot, message.author))
-        else:
-            embed.add_field(name="Is Haj Mod", value=await haj.utils.is_mod(bot, message.author, message.guild))
-        embed.set_thumbnail(url=message.author.display_avatar.url)
-        await message.channel.send(embed=embed)
-    else:
-        await message.reply(embed=haj.utils.error("Too many arguments for command `me`"))
+# async def command_ping(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+#     """
+#     Pong!
+#     Usage: `ping`
+#     """
+#
+#     if len(args) == 1:
+#         await message.channel.send(
+#             f"Pong ({int((datetime.datetime.now(datetime.timezone.utc) - message.created_at).total_seconds() * 1000)} "
+#             f"ms)")
+#     else:
+#         await message.reply(embed=haj.utils.error("Too many arguments for command `ping`"))
 
 
-async def admin_command_update_guilds(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    haj.utils.update_guild_ids(bot)
-    await message.channel.send(embed=discord.Embed(description="Done updating guild IDs"))
+# async def command_me(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+#     """
+#     Returns info about the sender of the message
+#     Usage: `me`
+#     """
+#
+#     if len(args) == 1:
+#         embed = discord.Embed(title="User Info")
+#         embed.add_field(name="Username", value=message.author.name)
+#         embed.add_field(name="Display Name", value=message.author.display_name)
+#         embed.add_field(name="User ID", value=message.author.id)
+#         if isinstance(message.channel, discord.DMChannel):
+#             embed.add_field(name="Is Haj Admin", value=haj.utils.is_admin(bot, message.author))
+#         else:
+#             embed.add_field(name="Is Haj Mod", value=await haj.utils.is_mod(bot, message.author, message.guild))
+#         embed.set_thumbnail(url=message.author.display_avatar.url)
+#         await message.channel.send(embed=embed)
+#     else:
+#         await message.reply(embed=haj.utils.error("Too many arguments for command `me`"))
 
 
-async def admin_command_help(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    await base_help(message, args, admin_commands)
+# async def admin_command_update_guilds(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+#     haj.utils.update_guild_ids(bot)
+#     await message.channel.send(embed=discord.Embed(description="Done updating guild IDs"))
+#
+#
+# async def admin_command_help(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
+#     await base_help(message, args, admin_commands)
 
 
 async def mod_command_help(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
@@ -233,19 +233,7 @@ async def mod_command_config(message: discord.Message, bot: haj.bot.Bot, args: l
 
 
 async def mod_command_test_sheets(message: discord.Message, bot: haj.bot.Bot, args: list[str]):
-    if len(args) == 9:
-        try:
-            if await haj.utils.is_sheets_available(bot, message):
-                haj.api.sheets.append(
-                    bot.database.data["config"]["tokens"]["google"],
-                    bot.database.data["guilds"][message.guild.id]["spreadsheet_id"],
-                    bot.database.data["guilds"][message.guild.id]["sheet_name"],
-                    args[1:]
-                )
-        except ValueError:
-            await message.reply(embed=haj.utils.error("Google Sheets API failed"))
-    else:
-        await message.channel.send(embed=haj.utils.error("Please supply 8 args"))
+    bot.sheets[message.guild.id].append_row(args[1:])
 
 
 async def command_help(message: discord.Message, bot: haj.bot.Bot, args: list[str]):

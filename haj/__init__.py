@@ -1,5 +1,5 @@
 import haj.api
-import haj.bot
+from haj.bot import Bot
 import haj.commands
-import haj.database
+from haj.database import Database
 import haj.utils
